@@ -1,18 +1,64 @@
 [build-system]
-requires = ["setuptools>=61", "wheel"]
-build-backend = "setuptools.build_meta"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
 [project]
 name = "widpath"
-version = "0.1.1"
-description = "A hierarchical file path resolver for WID-based storage"
+version = "0.2.0"
+description = "Hierarchical file-path resolver for WID-based storage"
 authors = [
-    { name = "sheng.SMLH", email = "sheng@silmoony.com" }
+    { name = "sheng.SMLH", email = "smlh.sheng@gmail.com" },
+    { name = "junsxu", email = "sheng@silmoony.com"}
 ]
 readme = "README.md"
-license = { file = "LICENSE" }
+license = { text = "MIT" }
 requires-python = ">=3.8"
-keywords = ["wid", "file storage", "hierarchical path"]
+keywords = ["wid", "file storage", "hierarchical path", "uuid", "graph"]
+classifies = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Libraries",
+    "Topic :: System :: Filesystems",
+]
 
 [project.urls]
 Homepage = "https://github.com/junsxu/widpath"
+Repository = "https://github.com/junsxu/widpath"
+"Bug Tracker" = "https://github.com/junsxu/widpath/issues"
+Changelog = "https://github.com/junsxu/widpath/blob/main/CHANGELOG.md"
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "pytest-cov>=4.0",
+    "ruff>=0.4",
+    "mypy>=1.0",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "--cov=widpath --cov-report=term-missing --cov-fail-under=95"
+markers = [
+    "perf: performance benchmarks (deselect with '-m not perf')",
+]
+
+[tool.coverage.run]
+source = ["widpath"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py38"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP"]
+
+[tool.mypy]
+python_version = "3.8"
+strict = true

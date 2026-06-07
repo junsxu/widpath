@@ -1,57 +1,160 @@
 # widpath
 
-`widpath` 是一个基于 **WID 分层规则** 的文件路径解析器，可以把长字符串 WID 映射到分层文件系统路径，用于存储和查找大规模 JSON 文件。
+[![CI](https://github.com/junsxu/widpath/actions/workflows/ci.yml/badge.svg)](https://github.com/junsxu/widpath/actions/workflows/ci/yml)
+[![PyPI version](https://badge.fury.io/py/widpath.svg)](https://pypi.org/project/widpath/)
+[![Python](https://img.shields.io/pypi/pyversions/widpath)](https://pypi.org/project/widpath/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-它的目标是方便地将数据切分为层次化的目录结构，避免单目录下文件过多，同时支持二分查找已有文件。
-
----
-
-## ✨ 特性
-
-- 支持将 WID 按固定大小分块，生成分层路径
-- 支持查找 **最合适的存储文件路径**（使用二分查找）
-- 默认从最深层开始回溯，效率接近 `O(logN)`
-- 可配置分块大小（默认为 `2`）和分隔符（默认为 `/`）
-- 简单易用，几行代码即可集成
-
-
----
-## 与现有方案对比
-
-目前在 PyPI 上常见的一些路径操作工具包括：
-
-| 包名 / 类型            | 功能亮点                    | 与 `widpath` 的区别        |
-| ------------------ | ----------------------- | ---------------------- |
-| **widpath** (本包)   | 根据 WID 切片 + 分层路径 + 二分查找 | 专为 WID 管理设计，支持快速定位存储路径 |
-| `wildpath`         | 通配符访问数据结构               | 与文件系统路径分层无关            |
-| `path` / `path.py` | 更友好的路径操作接口              | 注重路径 API，不支持 WID 分层策略  |
-| 标准库 `pathlib`      | 面向对象的路径处理，跨平台兼容         | 基础操作，不支持分层和二分查找        |
-
-结论：
-widpath 提供了一种专门针对 WID 的分层文件管理与查找机制，是对现有通用路径库的有益补充。
+**widpath** maps WID strings (UUID4 or any fixed-length hex ID) to a hierarchical file-system path tree, keeping directory entry counts bounded while supporting O(1) point lookup - no database required.
 
 ---
 
-## 📦 安装
+## What problem does it solve?
 
-### 从 PyPI 安装
-```bash
-pip install widpath
+Storing millions of UUID-keyed JSON files in a flat directory causes performance problems on every major OS (HFS+, ext4, NTFS all degrade beyong ~100 k entries per directory).
+
+widpath borrows the idea from Git's objext store (`.git/objects/ab/cdef...`) and generalises it to **adaptive depth**: a single JSON file at a shallow level holds all WIDs that share the same prefix. When that file grows too large, the caller splits it into deeper sub-files - and widpath's `locate` / `resolve` find the right file in at most **16 stat calls** for a 32-char UUID.
+
+```
+data/nodes/
+├── 8b.json             ← all WIDs starting with "8b" (few entries, stays shallow)
+├── 4a/
+|   ├── 3f.json         ← split: "4a3f..." WIDs moved here
+|   └── b7.json         ← split: "4ab7..." WIDs moved here
+└── ...
 ```
 
 ---
 
-## 支持作者
+## Install
 
-如果你觉得这个项目对你有帮助，可以考虑捐赠支持开发：
+```bash
+pip install widpath
+```
 
-### 现金支持
+Requires Python ≥ 3.8, no third-party dependencies.
 
-- PayPal: 
+---
 
-### 数字货币支持
+## Quick start
 
-- Bitcoin (BTC): bc1qa5g4aeg6rp8m46c4lwxfapesmwkns0rhjmm65g
-- Ethereum (ETH): 0xA466f5E4D0eaAc20f38154D7D4F0a2b75076e0a0
+```python
+from pathlib import Path
+from widpath import locate, WidPathResolver
 
-非常感谢你的支持 🙏
+base = Path("data/nodes")
+wid = "4a3f9c2b1e0d5678abcd1234567890ab"    # UUID4 with dashes stripped
+
+# ── Functional interface (canonical, O(depth) linear scan) ─────────────────
+path = locate(base, wid)
+# -> PosixPath('data/nodes/4a.json')  when base/ is empty
+
+# ── OOP interface (binary-search variant, O(log depth)) ────────────────────
+resolver = WidPathResolver()
+path = resolver.srsolve(wid, base)
+# same result
+```
+
+> **Note:** Strip UUID dashes before passing to widpath:
+> `wid = uuid_str.replace("-", "")`
+
+---
+
+## API reference
+
+### `locate(base_dir, wid, size=2) -> Path`
+
+Canonical O(depth) algorithm. Greedily descends into existing subdirectories
+named by successive WID segments, stopping at the first missing directory and
+returning `<current>/<segment>.json`.
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `base_dir` | `Path` | - | Root storage directory |
+| `wid` | `str` | - | Hex string, dashes removed |
+| `size` | `int` | `2` | Chars per path segment |
+
+---
+
+### `WidPathResolver(size=2)`
+
+OOP interface with a binary-search implementation of path location.
+
+| Method | Description |
+|--------|-------------|
+| `resolve(wid, base_dir)` | Locate file via binary search. Raises `FileNotFoundError` if `base_dir` missing. |
+| `path_at_level(wid, level)` | Build the **relative** path for `wid` at depth `level`. |
+| `max_level(wid)` | Maximum depth level = `len(wid) // size - 1`. |
+| `candidate_paths(wid, base_dir)` | All candidate paths from shallowest to deepest. |
+
+---
+
+## Comparison with Git object store
+
+| Feature | Git object store | widpath |
+|---------|------------------|---------|
+| Hash algorithm | SHA1 / SHA256 | Any hex string (UUID, SHA, etc.) |
+| Directory depth | Fixed 2 levels | Adaptive 1-16 levels |
+| File format | Binary blobs | Caller-defined (JSON, etc.) |
+| Multiple objects per file | No (1 object = 1 file) | Yes (bucket file holds many) |
+| Split strategy | `git gc` packs loose objects | Caller splits bucket files on overflow |
+
+
+## Comparison with Existing Solutions
+
+### Several path manipulation libraries are commonly available on PyPI:
+| Package / Type             | Key Features                                                       | Difference from `widpath`                                                                              |
+| -------------------------- | ------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------ |
+| **widpath** (this package) | WID-based slicing, hierarchical path generation, and binary search | Specifically designed for WID management, enabling fast storage path discovery                         |
+| `wildpath`                 | Wildcard-based access to data structures                           | Unrelated to hierarchical filesystem path organization                                                 |
+| `path` / `path.py`         | More user-friendly path manipulation APIs                          | Focuses on path operations rather than WID-based hierarchical storage strategies                       |
+| Standard Library `pathlib` | Object-oriented, cross-platform path handling                      | Provides general path operations only, without hierarchical partitioning or binary search capabilities |
+
+### Conclusion
+
+widpath introduces a dedicated hierarchical file organization and lookup mechanism tailored for WIDs. It complements existing general-purpose path libraries by providing efficient storage path management and fast lookup capabilities for large-scale WID-based datasets.
+
+---
+
+## 中文说明
+
+**widpath** 将WID字符串（UUID4或任意等长十六进制ID）映射到分层文件路径，
+避免单目录下文件过多，同时支持 O（1）级别的点查询，无需数据库。
+
+### 核心原理
+
+UUID4 去掉 `-` 后共32个十六进制字符，按每 2 字符分段得到 16 级路径：
+
+```
+4a3f9c2b...  -> 4a / 3f / 9c / 2b / ...
+```
+
+同一前缀的 WID 共存于同一个 JSON 文件。 文件过大时，调用方将其拆分为更深的子目录，
+widpath 的 `locate` / `get_file_path` 自动找到正确的文件。
+
+### 两种接口
+
+- **`locate(base_dir, wid)`**: 顺序遍历，沿着已存在的子目录下探，遇到缺失则返回当前层文件路径。
+- **`WidPathResolver.resolve(wid, base_dir)`**: 二分查找版本，在稀疏目录树上减少 stat 调用次数。
+
+两者在相同文件系统状态下返回相同结果（见 `tests/test_locate.py::TestAlgorithmConsistency`）。
+
+---
+
+## Development
+
+```bash
+git clone https://github.com/junsxu/widpath
+cd widpath
+pip install -e ".[dev]"
+pytest                     # run all tests (except perf)
+pytest -m perf             # run performance benchmarks
+ruff check widpath tests   # lint
+mypy widpath               # type check
+```
+
+---
+
+## License
+
+MIT @ junsxu / silmoony.com
