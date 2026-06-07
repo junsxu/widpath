@@ -8,20 +8,20 @@ on:
 
 jobs:
   test:
-    name: Test (Python $({ matrix.python-version}))
+    name: Test (Python ${{ matrix.python-version }})
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.8", "3.9", "3.10", "3.11", "3.12"]
+        python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
   
     steps:
       - uses: actions/checkout@v4
     
-      - name: Set up Python $({ matrix.python-version})
+      - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
         with:
-          python-version: $({ matrix.python-version})
+          python-version: ${{ matrix.python-version }}
     
       - name: Install dependencies
         run: pip install -e ".[dev]"
@@ -30,14 +30,14 @@ jobs:
         run: ruff check widpath tests
     
       - name: Type check (mypy)
-        if: matrix.python-version != '3.8' && matrix.python-version != '3.9'
+        if: matrix.python-version != '3.9'
         run: mypy widpath
     
       - name: Run tests
         run: pytest -m "not perf"
     
       - name: Upload coverage
-        if: matrix.python-version == '3.12'
+        if: matrix.python-version == '3.13'
         uses: actions/upload-artifact@v4
         with:
           name: coverage-report
