@@ -7,24 +7,24 @@ from pathlib import Path
 
 def locate(base_dir: Path, wid: str, size: int = 2) -> Path:
     """Locate the JSON file for *wid* by following existing directories.
-    
-    This is the canonical 0(depth) algorithm from the widpath specification.
+
+    This is the canonical O(depth) algorithm from the widpath specification.
     Starting from *base_dir*, it greedily descends into any existing
-    subdirectory name by the next WID segment, and stops at the first
+    subdirectory named by the next WID segment, and stops at the first
     segment whose corresponding entry is not a directory.
-    
+
     Args:
         base_dir: Root directory to search in.
         wid: Hex string with dashes already removed (e.g. ``"4a3f9c2b..."``).
         size: Number of hex characters per path segment. Defaults to ``2``.
-        
+
     Returns:
         Path to the ``.json`` file (may or may not exist yet).
-        
+
     Example:
         >>> from pathlib import Path
         >>> locate(Path("data/nodes"), "4a3f9c2b1e0d5678abcd1234567890ab")
-        PosixPath('data/nodes/4a.json') # when data/nodes/ is empty
+        PosixPath('data/nodes/4a.json')     # when data/nodes/ is empty
     """
     segments = [wid[i : i + size] for i in range(0, len(wid), size)]
     current = base_dir
@@ -39,9 +39,9 @@ def locate(base_dir: Path, wid: str, size: int = 2) -> Path:
 
 class WidPathResolver:
     """Resolves WID strings to hierarchical JSON file paths.
-    
+
     A WID (World ID) is any fixed-length hex string such as a UUID4 with
-    dashes stripped. The resolver maps it to path like::
+    dashes stripped. The resolver maps it to a path like::
 
         base_dir/ab/cd/ef.json
 
@@ -49,7 +49,7 @@ class WidPathResolver:
     segments, and each segment becomes either a directory component or the
     final filename stem. Files are located with a binary-search strategy
     over depth levels, which limits I/O to O(log depth) <= O(4) stat calls
-    for the default 16--level UUID layout.
+    for the default 16-level UUID layout.
 
     Args:
         size: Number of hex characters per path segment. Defaults to ``2```.
@@ -57,10 +57,10 @@ class WidPathResolver:
     Example:
         >>> resolver = WidPathResolver()
         >>> resolver.resolve("4a3f9c2b1e0d5678abcd1234567890ab", Path("data/nodes"))
-        PosixPath('data/nodes/4a.json')    
+        PosixPath('data/nodes/4a.json')
     """
 
-    def __init__(self, size: int = 2):
+    def __init__(self, size: int = 2) -> None:
         self.size = size
 
     # ------------------------------------------------------------------
@@ -69,15 +69,15 @@ class WidPathResolver:
 
     def _split_wid(self, wid: str) -> list[str]:
         """Split *wid* into fixed-size chunks.
-        
+
         Args:
             wid: Hex string (dashes already removed).
-        
+
         Returns:
             List of ``size``-character chunks. The last chunk may be shorter
-            if ``len(wid)`` is not multiple of ``size``.
+            if ``len(wid)`` is not a multiple of ``size``.
         """
-        return [wid[i:i + self.size] for i in range(0, len(wid), self.size)]
+        return [wid[i : i + self.size] for i in range(0, len(wid), self.size)]
 
     # ------------------------------------------------------------------
     # Public API
@@ -85,13 +85,13 @@ class WidPathResolver:
 
     def max_level(self, wid: str) -> int:
         """Return the maximum valid level index for *wid*.
-        
+
         At level ``0`` the path has one segment (e.g. ``ab.json``).
         At ``max_level`` the path has the maximum number of segments.
-        
+
         Args:
             wid: Hex string (dashes already removed).
-            
+
         Returns:
             ``len(wid) // size - 1``
         """
@@ -99,7 +99,7 @@ class WidPathResolver:
 
     def path_at_level(self, wid: str, level: int) -> Path:
         """Build the relative path for *wid* at a given depth *level*.
-        
+
         The returned path is **relative** (no base directory). Pass it to
         :meth:`resolve` or prepend a ``base_dir`` yourself.
 
@@ -109,7 +109,7 @@ class WidPathResolver:
                 ``[0, max_level]``.
 
         Returns:
-            A relative: class:`~pathlib.Path` ending in ``.json``.
+            A relative :class:`~pathlib.Path` ending in ``.json``.
 
         Example:
             >>> r = WidPathResolver()
@@ -123,16 +123,16 @@ class WidPathResolver:
         level = min(max(level, 0), top)
         # Build path: parts[0]/parts[1]/.../parts[level].json
         return Path(*parts[: level + 1]).with_suffix(".json")
-    
+
     def candidate_paths(self, wid: str, base_dir: Path) -> list[Path]:
         """Return all candidate paths from shallowest to deepest.
-        
+
         Useful for debugging or pre-generating the full path space for a WID.
-        
+
         Args:
             wid: Hex string (dashes already removed).
             base_dir: Root directory to prepend to every path.
-        
+
         Returns:
             List of :class:`~pathlib.Path` objects, index 0 = shallowest.
         """
@@ -144,22 +144,22 @@ class WidPathResolver:
 
     def resolve(self, wid: str, base_dir: Path) -> Path:
         """Locate the JSON file for *wid* using a binary-search over depth levels.
-        
+
         The search starts from the maximum depth and narrows down, returning
         the path of the shallowest existing file that could contain *wid*, or
         the target path at the shallowest level if nothing exists yet.
-        
+
         Args:
             wid: Hex string (dashes already removed).
             base_dir: Root directory to search in. Must exist.
-            
+
         Returns:
-            :class:~pathlib.Path` to the ``.json`` file (may not exist yet
+            :class:`~pathlib.Path` to the ``.json`` file (may not exist yet
             if the WID is new).
-            
+
         Raises:
             FileNotFoundError: If *base_dir* does not exist.
-            
+
         Example:
             >>> resolver = WidPathResolver()
             >>> resolver.resolve("4a3f9c2b1e0d5678abcd1234567890ab", Path("data/nodes"))
@@ -167,13 +167,13 @@ class WidPathResolver:
         """
         if not base_dir.exists():
             raise FileNotFoundError(f"base_dir does not exist: {base_dir}")
-        
+
         top = self.max_level(wid)
 
         # Fast path for single-segment WIDs.
         if top == 0:
             return base_dir / self.path_at_level(wid, 0)
-        
+
         parts = self._split_wid(wid)
 
         # Binary search: find the deepest level L where prefix_dir(L) exists.

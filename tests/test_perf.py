@@ -22,7 +22,7 @@ def test_path_at_level_throughput():
 
 
 @pytest.mark.perf
-def test_locat_empty_dir_throughput(tmp_path):
+def test_locate_empty_dir_throughput(tmp_path):
     start = time.perf_counter()
     for _ in range(ITERATIONS):
         locate(tmp_path, WID)
@@ -40,12 +40,12 @@ def test_binary_search_stat_count(tmp_path):
     def counting_exists(self: Path) -> bool:
         stat_calls.append(self)
         return original_exists(self)
-    
+
     import unittest.mock as mock
 
     with mock.patch.object(Path, "exists", counting_exists):
         r.resolve(WID, tmp_path)
-    
+
     assert len(stat_calls) <= 6, (
         f"Binary search made {len(stat_calls)} stat calls (expected ≤ 6)"
     )

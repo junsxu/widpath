@@ -33,21 +33,21 @@ class TestUUIDWithDashes:
 
     def test_uuid_with_dashes_splits_incorrectly(self):
         r = WidPathResolver(size=2)
-        # dashes should be strippedd by the caller
+        # dashes should be stripped by the caller
         raw = "4a3f9c2b-1e0d-5678-abcd-1234567890ab"
         stripped = raw.replace("-", "")
         parts_raw = r._split_wid(raw)
         parts_stripped = r._split_wid(stripped)
         # raw contains '-' so chunks differ
         assert parts_raw != parts_stripped
-    
+
     def test_stripped_uuid_has_32_chars(self):
         raw = "4a3f9c2b-1e0d-5678-abcd-1234567890ab"
         assert len(raw.replace("-", "")) == 32
 
 
 class TestPathSeparators:
-    """"Paths produced by widpath must be valid on the current OS."""
+    """Paths produced by widpath must be valid on the current OS."""
 
     def test_path_at_level_uses_pathlib(self):
         r = WidPathResolver()
@@ -87,7 +87,7 @@ class TestBaseDir:
         r = WidPathResolver()
         with pytest.raises(FileNotFoundError):
             r.resolve("4a3f9c2b1e0d5678abcd1234567890ab", tmp_path / "missing")
-    
+
     def test_nested_base_dir(self, tmp_path):
         base = tmp_path / "data" / "nodes"
         base.mkdir(parents=True)

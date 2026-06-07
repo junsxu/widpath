@@ -13,8 +13,6 @@ Quick start::
     path = resolver.resolve("4a3f9c2b1e0d5678abcd1234567890ab", Path("data/nodes"))
 """
 
-
-
 from .resolver import WidPathResolver, locate
 
 __all__ = ["WidPathResolver", "locate"]

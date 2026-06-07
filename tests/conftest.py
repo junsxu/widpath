@@ -4,7 +4,7 @@ import pytest
 
 from widpath import WidPathResolver
 
-WID_32 = "4a3f9c2b1e0d5678abcd1234567890ab"    # 32 hex chars -> 16 segments at size=2 
+WID_32 = "4a3f9c2b1e0d5678abcd1234567890ab"    # 32 hex chars -> 16 segments at size=2
 
 
 @pytest.fixture

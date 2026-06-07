@@ -22,17 +22,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-    
+
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-    
+
       - name: Install build
         run: pip install build
-      
+
       - name: Build wheel and distribution
         run: python -m build
-    
+
       - name: Upload dist artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -45,17 +45,17 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: pypi
-      url: https://pypi.org/project/widpath
+      url: https://pypi.org/project/widpath/
     permissions:
       id-token: write   # Required for OIDC Trusted Publishing
-  
+
     steps:
       - name: Download dist artifacts
         uses: actions/download-artifact@v4
         with:
           name: dist
           path: dist/
-    
+
       - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
         # No api_token needed - uses OIDC Trunsted Publishing configured on PyPI

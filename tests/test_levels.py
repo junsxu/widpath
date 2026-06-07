@@ -12,11 +12,11 @@ class TestMaxLevel:
     def test_single_segment_wid(self):
         # "4a" -> 2 chars / 2 = 1 segment -> max_level = 0
         assert WidPathResolver().max_level("4a") == 0
-    
+
     def test_size_4(self):
         # "4a3f9c2b" -> 8 chars / 4 = 2 segments -> max_level = 1
         assert WidPathResolver(size=4).max_level("4a3f9c2b") == 1
-    
+
     def test_size_1(self):
         # "4a3f" -> 4 chars / 1 = 4 segments -> max_level = 3
         assert WidPathResolver(size=1).max_level("4a3f") == 3
@@ -75,4 +75,3 @@ class TestCandidatePaths:
         wid = "4a3f9c2b1e0d5678abcd1234567890ab"
         for p in r.candidate_paths(wid, tmp_path):
             assert str(p).startswith(str(tmp_path))
-    

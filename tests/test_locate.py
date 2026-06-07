@@ -28,7 +28,7 @@ class TestLocate:
         assert result == tmp_path / "4a" / "3f" / "9c.json"
 
     def test_file_does_not_affect_traversal(self, tmp_path):
-        """locate() only check is_dir(), not file existence."""
+        """locate() only checks is_dir(), not file existence."""
         (tmp_path / "4a.json").write_text("{}")
         # "4a" is a file, not a directory, so it stops at level 0
         result = locate(tmp_path, WID)

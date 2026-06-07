@@ -1,6 +1,6 @@
 # widpath
 
-[![CI](https://github.com/junsxu/widpath/actions/workflows/ci.yml/badge.svg)](https://github.com/junsxu/widpath/actions/workflows/ci/yml)
+[![CI](https://github.com/junsxu/widpath/actions/workflows/ci.yml/badge.svg)](https://github.com/junsxu/widpath/actions/workflows/ci.yml)
 [![PyPI version](https://badge.fury.io/py/widpath.svg)](https://pypi.org/project/widpath/)
 [![Python](https://img.shields.io/pypi/pyversions/widpath)](https://pypi.org/project/widpath/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
@@ -51,7 +51,7 @@ path = locate(base, wid)
 
 # ── OOP interface (binary-search variant, O(log depth)) ────────────────────
 resolver = WidPathResolver()
-path = resolver.srsolve(wid, base)
+path = resolver.resolve(wid, base)
 # same result
 ```
 
@@ -150,7 +150,7 @@ pip install -e ".[dev]"
 pytest                     # run all tests (except perf)
 pytest -m perf             # run performance benchmarks
 ruff check widpath tests   # lint
-mypy widpath               # type check
+mypy src                   # type check
 ```
 
 ---
