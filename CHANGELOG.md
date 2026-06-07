@@ -28,7 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `WidPathResolver.__init__.py` now exports `__version__ = "0.2.0"`.
 - Full test suite: `test_split`, `test_levels`, `test_locate`, `test_edge_cases`,
   `test_perf` - coverage ≥ 95 %.
-- GitHub Actions CI workflow (Python 3.8-3.12 matrix, ruff, mypy).
+- GitHub Actions CI workflow (Python 3.9-3.13 matrix, ruff, mypy).
 - GitHub Actions publish workflow (OIDC Trusted Publishing -> PyPI on Release).
 - Bilingual README (EN + CN).
 - `pyproject.toml` replaces legacy `setup.py`.

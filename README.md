@@ -32,7 +32,7 @@ data/nodes/
 pip install widpath
 ```
 
-Requires Python ≥ 3.8, no third-party dependencies.
+Requires Python ≥ 3.9, no third-party dependencies.
 
 ---
 
