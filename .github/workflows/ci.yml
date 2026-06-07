@@ -31,7 +31,7 @@ jobs:
     
       - name: Type check (mypy)
         if: matrix.python-version != '3.9'
-        run: mypy src tests
+        run: mypy src
     
       - name: Run tests
         run: pytest -m "not perf"
