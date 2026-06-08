@@ -16,4 +16,4 @@ Quick start::
 from .resolver import WidPathResolver, locate
 
 __all__ = ["WidPathResolver", "locate"]
-__version__ = "0.2.0"
+__version__ = "1.0.0"

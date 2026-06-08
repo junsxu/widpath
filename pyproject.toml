@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "widpath"
-version = "0.2.0"
+version = "1.0.0"
 description = "Hierarchical file-path resolver for WID-based storage"
 authors = [
     { name = "sheng.SMLH", email = "smlh.sheng@gmail.com" },
@@ -15,7 +15,7 @@ license = { text = "MIT" }
 requires-python = ">=3.9"
 keywords = ["wid", "file storage", "hierarchical path", "uuid", "graph"]
 classifies = [
-    "Development Status :: 4 - Beta",
+    "Development Status :: 5 - Production/Stable",
     "Intended Audience :: Developers",
     "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
