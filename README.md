@@ -86,6 +86,7 @@ OOP interface with a binary-search implementation of path location.
 | `path_at_level(wid, level)` | Build the **relative** path for `wid` at depth `level`. |
 | `max_level(wid)` | Maximum depth level = `len(wid) // size - 1`. |
 | `candidate_paths(wid, base_dir)` | All candidate paths from shallowest to deepest. |
+| `is_deepest_dir(wid, path, base_dir=None)` | Check whether a directory path is the deepest possible directory for `wid`. |
 
 ---
 

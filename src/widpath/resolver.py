@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Optional
 
 
 def locate(base_dir: Path, wid: str, size: int = 2) -> Path:
@@ -141,6 +142,40 @@ class WidPathResolver:
             base_dir / self.path_at_level(wid, lvl)
             for lvl in range(top + 1)
         ]
+
+    def is_deepest_dir(
+        self,
+        wid: str,
+        path: Path,
+        base_dir: Optional[Path] = None,  # noqa: UP045
+    ) -> bool:
+        """Return whether *path* is the deepest directory for *wid*.
+
+        The check is structural and does not require *path* to exist. When
+        *base_dir* is supplied, absolute paths under it are converted to a
+        relative path before comparison.
+
+        Args:
+            wid: Hex string (dashes already removed).
+            path: Directory path to test. It may be relative to *base_dir* or
+                absolute under *base_dir*.
+            base_dir: Optional root directory used to relativize absolute
+                *path* values.
+
+        Returns:
+            ``True`` if *path* is the parent directory of the deepest candidate
+            JSON path for *wid*.
+        """
+        candidate = Path(path)
+        if base_dir is not None:
+            try:
+                candidate = candidate.relative_to(base_dir)
+            except ValueError:
+                if candidate.is_absolute():
+                    return False
+
+        deepest_dir = self.path_at_level(wid, self.max_level(wid)).parent
+        return candidate == deepest_dir
 
     def resolve(self, wid: str, base_dir: Path) -> Path:
         """Locate the JSON file for *wid* using a binary-search over depth levels.

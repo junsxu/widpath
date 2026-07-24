@@ -75,3 +75,36 @@ class TestCandidatePaths:
         wid = "4a3f9c2b1e0d5678abcd1234567890ab"
         for p in r.candidate_paths(wid, tmp_path):
             assert str(p).startswith(str(tmp_path))
+
+
+class TestIsDeepestDir:
+    WID = "4a3f9c2b1e0d5678abcd1234567890ab"
+
+    def test_relative_deepest_dir_returns_true(self):
+        r = WidPathResolver()
+        path = Path("4a/3f/9c/2b/1e/0d/56/78/ab/cd/12/34/56/78/90")
+        assert r.is_deepest_dir(self.WID, path)
+
+    def test_intermediate_dir_returns_false(self):
+        r = WidPathResolver()
+        assert not r.is_deepest_dir(self.WID, Path("4a/3f/9c"))
+
+    def test_deepest_file_path_returns_false(self):
+        r = WidPathResolver()
+        path = Path("4a/3f/9c/2b/1e/0d/56/78/ab/cd/12/34/56/78/90/ab.json")
+        assert not r.is_deepest_dir(self.WID, path)
+
+    def test_absolute_path_under_base_dir_returns_true(self, tmp_path):
+        r = WidPathResolver()
+        path = tmp_path / "4a/3f/9c/2b/1e/0d/56/78/ab/cd/12/34/56/78/90"
+        assert r.is_deepest_dir(self.WID, path, tmp_path)
+
+    def test_absolute_path_outside_base_dir_returns_false(self, tmp_path):
+        r = WidPathResolver()
+        other_base = tmp_path.parent / "other"
+        path = other_base / "4a/3f/9c/2b/1e/0d/56/78/ab/cd/12/34/56/78/90"
+        assert not r.is_deepest_dir(self.WID, path, tmp_path)
+
+    def test_single_segment_wid_base_dir_is_deepest(self, tmp_path):
+        r = WidPathResolver()
+        assert r.is_deepest_dir("4a", tmp_path, tmp_path)
